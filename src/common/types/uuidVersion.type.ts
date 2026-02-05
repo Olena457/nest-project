@@ -1,0 +1,1 @@
+export type TUUIDVersion = '3' | '4' | '5' | '7';
