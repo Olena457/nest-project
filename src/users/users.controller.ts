@@ -7,6 +7,7 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -14,6 +15,7 @@ import {
   ApiBody,
   ApiExcludeEndpoint,
   ApiOperation,
+  ApiQuery,
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
@@ -28,6 +30,14 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
 import { UsersService } from './users.service';
+
+interface UsersQuery {
+  page?: number;
+  limit?: number;
+  name?: string;
+  sortBy?: string;
+  order?: 'ASC' | 'DESC';
+}
 
 @ApiTags('Core: Users')
 @ApiBearerAuth()
@@ -49,8 +59,14 @@ export class UsersController {
   @Roles(ERole.SUPERADMIN, ERole.MODERATOR)
   @ApiResponse({ status: 200, description: 'List of users.', type: [User] })
   @ApiOperation({ summary: 'Get all users (admin)' })
-  findAll() {
-    return this.usersService.findAll();
+  // added params toSwagger
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiQuery({ name: 'name', required: false, type: String })
+  @ApiQuery({ name: 'sortBy', required: false, enum: ['email', 'created_at'] })
+  @ApiQuery({ name: 'order', required: false, enum: ['ASC', 'DESC'] })
+  findAll(@Query() query: UsersQuery) {
+    return this.usersService.findAll(query);
   }
 
   @Get(':id')
