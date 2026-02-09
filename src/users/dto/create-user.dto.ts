@@ -9,14 +9,32 @@ export class CreateUserDto {
   })
   @IsString()
   @Length(1, 255)
+  @IsOptional() // added, if provider UID  is provided
   providerUid?: string;
+
+  @ApiProperty({ example: 'Lucas', description: 'Hame user' })
+  @IsString()
+  @Length(2, 50)
+  firstName!: string;
+
+  @ApiProperty({ example: 'Smith', description: 'Last name' })
+  @IsString()
+  @Length(2, 50)
+  lastName!: string;
 
   @ApiProperty({
     example: 'user@example.com',
     description: 'Unique email (lowercased)',
   })
   @IsEmail()
-  @Transform(({ value }) => value?.toLowerCase().trim())
+  @IsString()
+  @Transform(({ value }: { value: unknown }) => {
+    if (typeof value === 'string') {
+      return value.toLowerCase().trim();
+    }
+
+    return '';
+  })
   email!: string;
 
   @ApiPropertyOptional({
@@ -29,4 +47,3 @@ export class CreateUserDto {
   })
   phoneNumber?: string;
 }
-// change user schema
