@@ -22,7 +22,7 @@ import {
 import type { DecodedIdToken } from 'firebase-admin/auth';
 
 import { User as CurrentUser } from '../auth/decorators/user.decorator';
-// import { FirebaseAuthGuard } from '../auth/guards/firebase-auth.guard';
+import { FirebaseAuthGuard } from '../auth/guards/firebase-auth.guard';
 import { ERole } from '../user-roles/enums/role.enum';
 import { Roles } from '../user-roles/user-roles.decorator';
 import { RolesGuard } from '../user-roles/user-roles.guard';
@@ -41,7 +41,7 @@ interface UsersQuery {
 
 @ApiTags('Core: Users')
 @ApiBearerAuth()
-// @UseGuards(FirebaseAuthGuard)
+@UseGuards(FirebaseAuthGuard)
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
