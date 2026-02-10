@@ -56,12 +56,12 @@ export class CreateAuthDto {
 
   @IsOptional()
   @IsString()
-  @ApiProperty({ example: 'Olena', description: 'First name', required: false })
+  @ApiProperty({ example: 'Lucas', description: 'First name', required: false })
   firstName?: string;
 
   @IsOptional()
   @IsString()
-  @ApiProperty({ example: 'Ivanova', description: 'Last name', required: false })
+  @ApiProperty({ example: 'Smith', description: 'Last name', required: false })
   lastName?: string;
 
   @IsOptional()
