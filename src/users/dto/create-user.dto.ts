@@ -15,15 +15,17 @@ export class CreateUserDto {
   @IsOptional() // added, if provider UID  is provided
   providerUid?: string;
 
-  @ApiProperty({ example: 'Lucas', description: 'Hame user' })
+  @ApiPropertyOptional({ example: 'Lucas', description: 'First name of the user' })
   @IsString()
+  @IsOptional()
   @Length(2, 50)
-  firstName!: string;
+  firstName?: string;
 
-  @ApiProperty({ example: 'Smith', description: 'Last name' })
+  @ApiPropertyOptional({ example: 'Smith', description: 'Last name of the user' })
   @IsString()
+  @IsOptional()
   @Length(2, 50)
-  lastName!: string;
+  lastName?: string;
 
   @ApiPropertyOptional({ enum: ERole, example: ERole.GUEST })
   @IsEnum(ERole)
