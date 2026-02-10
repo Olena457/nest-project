@@ -17,13 +17,34 @@ export class WsFirebaseAuthGuard implements CanActivate {
   ) {}
 
   async canActivate(ctx: ExecutionContext): Promise<boolean> {
-    const client: any = ctx.switchToWs().getClient();
-    const authHeader = client.handshake?.headers?.authorization as string | undefined;
-    const bearer = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : undefined;
+    const rawClient: unknown = ctx.switchToWs().getClient();
+
+    function isWsClient(obj: unknown): obj is {
+      handshake?: {
+        headers?: Record<string, string>;
+        auth?: Record<string, unknown>;
+        query?: Record<string, string>;
+      };
+      data?: { user?: admin.auth.DecodedIdToken; userId?: string; email?: string };
+    } {
+      return typeof obj === 'object' && obj !== null;
+    }
+
+    if (!isWsClient(rawClient)) {
+      throw new UnauthorizedException('Invalid client');
+    }
+
+    const client = rawClient;
+
+    const authHeader = client.handshake?.headers?.authorization;
+    const bearer =
+      typeof authHeader === 'string' && authHeader.startsWith('Bearer ')
+        ? authHeader.slice(7)
+        : undefined;
     const token =
-      client.handshake?.auth?.token ||
+      (client.handshake?.auth?.token as string | undefined) ||
       bearer ||
-      (client.handshake?.query?.token as string | undefined);
+      client.handshake?.query?.token;
 
     if (!token) {
       throw new UnauthorizedException('Authentication token not found.');
@@ -41,6 +62,7 @@ export class WsFirebaseAuthGuard implements CanActivate {
       throw new UnauthorizedException('User not found.');
     }
 
+    client.data = client.data || {};
     client.data.user = decoded;
     client.data.userId = dbUser.id;
     client.data.email = dbUser.email;

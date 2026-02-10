@@ -11,7 +11,8 @@ export class PasswordNotEmailConstraint implements ValidatorConstraintInterface 
       return false;
     }
 
-    const email: string | undefined = (args.object as any)?.email;
+    const obj = args.object as { email?: unknown };
+    const email = typeof obj.email === 'string' ? obj.email : undefined;
     if (!email) {
       return true;
     }

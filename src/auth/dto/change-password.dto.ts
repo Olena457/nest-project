@@ -19,7 +19,7 @@ export class ChangePasswordDto {
   @ApiProperty({ example: 'user@example.com', description: 'The email of the user' })
   email!: string;
 
-  @ValidateIf((o) => o.password != null)
+  @ValidateIf((o: ChangePasswordDto) => o.password != null)
   @IsString()
   @MinLength(8, { message: 'Password must be at least 8 characters long.' })
   @MaxLength(128, { message: 'Password must be at most 128 characters long.' })
@@ -44,7 +44,7 @@ export class ChangePasswordDto {
   })
   password?: string;
 
-  @ValidateIf((o) => o.password != null)
+  @ValidateIf((o: ChangePasswordDto) => o.password != null)
   @IsString()
   @Match('password', { message: 'Confirm password must match password.' })
   @ApiProperty({
@@ -54,7 +54,7 @@ export class ChangePasswordDto {
   })
   confirmPassword?: string;
 
-  @ValidateIf((o) => o.isWeb != null)
+  @ValidateIf((o: ChangePasswordDto) => o.isWeb != null)
   @IsBoolean()
   @ApiProperty({
     example: true,

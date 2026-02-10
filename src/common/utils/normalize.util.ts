@@ -51,11 +51,11 @@ export function normalizeEmail(value: string): string {
   return value.toLowerCase().trim();
 }
 
-export function normalizePhone(value?: unknown) {
+export function normalizePhone(value?: unknown): string | null | undefined {
   return normalizeString(value, { emptyToNull: true, fieldName: 'phoneNumber' });
 }
 
-export function safeParseJSON(s: string) {
+export function safeParseJSON(s: string): unknown {
   try {
     return JSON.parse(s);
   } catch {

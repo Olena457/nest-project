@@ -4,9 +4,8 @@ import { UsersService } from './users.service';
 
 describe('UsersController', () => {
   let controller: UsersController;
-  const service = {} as unknown as UsersService;
-  const profileService = {} as unknown as UserProfileService;
-
+  const service: Partial<UsersService> = {};
+  const profileService: Partial<UserProfileService> = {};
   beforeEach(() => {
     controller = new UsersController(service, profileService);
   });

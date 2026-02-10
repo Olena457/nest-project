@@ -26,6 +26,8 @@ import { UsersModule } from './users/users.module';
 
         const pinoHttpOptions: PinoHttpOptions = {
           genReqId(req: IncomingMessage, _res: ServerResponse): string {
+            void _res;
+
             return (req.headers['x-request-id'] as string) ?? randomUUID();
           },
           autoLogging: {

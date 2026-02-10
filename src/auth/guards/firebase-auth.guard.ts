@@ -8,8 +8,8 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import * as admin from 'firebase-admin';
-import { Observable } from 'rxjs';
 import { DataSource } from 'typeorm';
+import type { Request } from 'express';
 
 import { User } from '../../users/entities/user.entity';
 import { ALLOW_BANNED_USERS_KEY } from '../decorators/allow-banned-users.decorator';
@@ -22,38 +22,41 @@ export class FirebaseAuthGuard implements CanActivate {
     private readonly reflector: Reflector,
   ) {}
 
-  canActivate(context: ExecutionContext): boolean | Promise<boolean> | Observable<boolean> {
-    const request = context.switchToHttp().getRequest();
-    const idToken = request.headers.authorization?.split('Bearer ')[1];
+  async canActivate(context: ExecutionContext): Promise<boolean> {
+    const request = context
+      .switchToHttp()
+      .getRequest<Request & { user?: admin.auth.DecodedIdToken }>();
+    const authHeader = request.headers.authorization;
+    const idToken =
+      typeof authHeader === 'string' && authHeader.startsWith('Bearer ')
+        ? authHeader.slice(7)
+        : undefined;
 
     if (!idToken) {
       throw new UnauthorizedException('Authentication token not found.');
     }
 
-    return this.firebaseAdmin
-      .auth()
-      .verifyIdToken(idToken)
-      .then(async (decodedToken) => {
-        request.user = decodedToken;
+    try {
+      const decodedToken = await this.firebaseAdmin.auth().verifyIdToken(idToken);
+      request.user = decodedToken;
 
-        const allowBannedUsers = this.reflector.getAllAndOverride<boolean>(ALLOW_BANNED_USERS_KEY, [
-          context.getHandler(),
-          context.getClass(),
-        ]);
+      const allowBannedUsers = this.reflector.getAllAndOverride<boolean>(ALLOW_BANNED_USERS_KEY, [
+        context.getHandler(),
+        context.getClass(),
+      ]);
 
-        if (!allowBannedUsers) {
-          await this.checkBannedStatus(decodedToken.uid);
-        }
+      if (!allowBannedUsers) {
+        await this.checkBannedStatus(decodedToken.uid);
+      }
 
-        return true;
-      })
-      .catch((error) => {
-        if (error instanceof ForbiddenException) {
-          throw error;
-        }
+      return true;
+    } catch (err: unknown) {
+      if (err instanceof ForbiddenException) {
+        throw err;
+      }
 
-        throw new UnauthorizedException('Invalid authentication token.');
-      });
+      throw new UnauthorizedException('Invalid authentication token.');
+    }
   }
 
   private async checkBannedStatus(providerUid: string): Promise<void> {

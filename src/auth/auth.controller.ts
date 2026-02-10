@@ -1,11 +1,8 @@
-import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Post, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import type { Request } from 'express';
-import type { DecodedIdToken } from 'firebase-admin/auth';
 
 import { User } from '../users/entities/user.entity';
 import { AuthService } from './auth.service';
-import { User as CurrentUser } from './decorators/user.decorator';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { CreateAuthDto, LoginDto } from './dto/create-auth.dto';
 import { RefreshDto } from './dto/refresh.dto';
@@ -30,7 +27,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Sign in a user' })
   @ApiBody({ type: LoginDto })
   @ApiResponse({ status: 200, description: 'Successful login.' })
-  signIn(@Body() loginDto: LoginDto, @Req() req: Request) {
+  signIn(@Body() loginDto: LoginDto) {
     return this.authService.signIn(loginDto);
   }
 
@@ -43,7 +40,7 @@ export class AuthController {
     type: User,
   })
   @ApiResponse({ status: 400, description: 'Bad Request.' })
-  googleSignIn(@Body() createAuthDto: CreateAuthDto, @Req() req: Request) {
+  googleSignIn(@Body() createAuthDto: CreateAuthDto) {
     return this.authService.socialSignIn(createAuthDto);
   }
 
@@ -56,7 +53,7 @@ export class AuthController {
     type: User,
   })
   @ApiResponse({ status: 400, description: 'Bad Request.' })
-  appleSignIn(@Body() createAuthDto: CreateAuthDto, @Req() req: Request) {
+  appleSignIn(@Body() createAuthDto: CreateAuthDto) {
     return this.authService.socialSignIn(createAuthDto);
   }
 
@@ -79,7 +76,7 @@ export class AuthController {
   @UseGuards(FirebaseAuthGuard)
   @Post('logout')
   @ApiOperation({ summary: 'Logout (audit only)' })
-  async logout(@CurrentUser() user: DecodedIdToken, @Req() req: Request) {
+  logout() {
     return this.authService.logout();
   }
 }

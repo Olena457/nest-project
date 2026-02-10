@@ -2,6 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import {
   IsEmail,
   IsString,
+  IsOptional,
   IsStrongPassword,
   Matches,
   MaxLength,
@@ -18,7 +19,7 @@ export class CreateAuthDto {
   @ApiProperty({ example: 'user@example.com', description: 'The email of the user' })
   email!: string;
 
-  @ValidateIf((o) => o.password != null)
+  @ValidateIf((o: CreateAuthDto) => o.password != null)
   @IsString()
   @MinLength(8, { message: 'Password must be at least 8 characters long.' })
   @MaxLength(128, { message: 'Password must be at most 128 characters long.' })
@@ -43,7 +44,7 @@ export class CreateAuthDto {
   })
   password?: string;
 
-  @ValidateIf((o) => o.password != null)
+  @ValidateIf((o: CreateAuthDto) => o.password != null)
   @IsString()
   @Match('password', { message: 'Confirm password must match password.' })
   @ApiProperty({
@@ -53,7 +54,22 @@ export class CreateAuthDto {
   })
   confirmPassword?: string;
 
-  @ValidateIf((o) => o.idToken != null)
+  @IsOptional()
+  @IsString()
+  @ApiProperty({ example: 'Olena', description: 'First name', required: false })
+  firstName?: string;
+
+  @IsOptional()
+  @IsString()
+  @ApiProperty({ example: 'Ivanova', description: 'Last name', required: false })
+  lastName?: string;
+
+  @IsOptional()
+  @IsString()
+  @ApiProperty({ example: '+380xxxxxxxxx', description: 'Phone number', required: false })
+  phoneNumber?: string;
+
+  @ValidateIf((o: CreateAuthDto) => o.idToken != null)
   @IsString()
   @ApiProperty({ description: 'The ID token from a social provider', required: false })
   idToken?: string;

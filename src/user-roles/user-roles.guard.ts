@@ -30,8 +30,8 @@ export class RolesGuard implements CanActivate {
       return true;
     }
 
-    const req = ctx.switchToHttp().getRequest();
-    const decoded = req.user as { uid?: string } | undefined;
+    const req = ctx.switchToHttp().getRequest<{ user?: { uid?: string }; userRoles?: ERole[] }>();
+    const decoded = req.user;
     if (!decoded?.uid) {
       throw new UnauthorizedException('No Firebase uid on request');
     }
