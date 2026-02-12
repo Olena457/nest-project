@@ -12,25 +12,45 @@ export class UserRolesService {
     private readonly repo: Repository<UserRole>,
   ) {}
 
+  // async createDefaultForUser(userId: string): Promise<UserRole> {
+  //   await this.repo
+  //     .createQueryBuilder()
+  //     .insert()
+  //     .into(UserRole)
+  //     .values({ userId, role: ERole.GUEST })
+  //     .orIgnore()
+  //     .execute();
+
+  //   const roles = await this.listRoles(userId);
+  //   const guest = roles.find((r) => r.role === ERole.GUEST);
+
+  //   return (
+  //     guest ??
+  //     roles[0] ??
+  //     (() => {
+  //       throw new NotFoundException('User role not found');
+  //     })()
+  //   );
+  // }
   async createDefaultForUser(userId: string): Promise<UserRole> {
-    await this.repo
-      .createQueryBuilder()
-      .insert()
-      .into(UserRole)
-      .values({ userId, role: ERole.GUEST })
-      .orIgnore()
-      .execute();
+    try {
+      const newRole = this.repo.create({
+        user: { id: userId },
+        role: ERole.GUEST,
+      } as unknown as UserRole);
 
-    const roles = await this.listRoles(userId);
-    const guest = roles.find((r) => r.role === ERole.GUEST);
+      return await this.repo.save(newRole);
+    } catch {
+      const roles = await this.listRoles(userId);
 
-    return (
-      guest ??
-      roles[0] ??
-      (() => {
-        throw new NotFoundException('User role not found');
-      })()
-    );
+      if (roles && roles.length > 0) {
+        const guest = roles.find((r) => r.role === ERole.GUEST);
+
+        return guest || roles[0];
+      }
+
+      throw new NotFoundException(`User role not found for ID: ${userId}`);
+    }
   }
 
   async grantRole(userId: string, role: ERole): Promise<UserRole> {

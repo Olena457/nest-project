@@ -184,8 +184,48 @@ export class AuthService {
     private readonly userRolesService: UserRolesService,
   ) {}
 
+  // async signUp(createAuthDto: CreateAuthDto) {
+  //   const { email, password, confirmPassword } = createAuthDto;
+
+  //   if (!password) {
+  //     throw new BadRequestException('Password is required for email/password sign-up.');
+  //   }
+
+  //   if (!confirmPassword || password !== confirmPassword) {
+  //     throw new BadRequestException('Confirm password is missing or invalid.');
+  //   }
+
+  //   try {
+  //     const firebaseUser = await this.firebaseService.signUp(email, password);
+  //     const firebaseUid = firebaseUser.localId;
+
+  //     try {
+  //       const user = await this.usersService.create({ email }, firebaseUid);
+  //       await this.userRolesService.createDefaultForUser(user.id);
+
+  //       return { firebaseUser, user };
+  //     } catch (dbErr: unknown) {
+  //       await this.firebaseService.deleteUser(firebaseUid);
+  //       const msg =
+  //         typeof dbErr === 'object' && dbErr !== null && 'message' in dbErr
+  //           ? (dbErr as Error).message
+  //           : String(dbErr);
+  //       throw new InternalServerErrorException(`User registration failed: ${msg}`);
+  //     }
+  //   } catch (err: unknown) {
+  //     if (isFirebaseError(err) && err.response?.data?.error?.message === 'EMAIL_EXISTS') {
+  //       throw new ConflictException('Email already exists');
+  //     }
+
+  //     const msg =
+  //       typeof err === 'object' && err !== null && 'message' in err
+  //         ? (err as Error).message
+  //         : String(err);
+  //     throw new InternalServerErrorException(msg || 'Error creating user in Firebase');
+  //   }
+  // }
   async signUp(createAuthDto: CreateAuthDto) {
-    const { email, password, confirmPassword } = createAuthDto;
+    const { email, password, confirmPassword, firstName, lastName, phoneNumber } = createAuthDto;
 
     if (!password) {
       throw new BadRequestException('Password is required for email/password sign-up.');
@@ -200,7 +240,16 @@ export class AuthService {
       const firebaseUid = firebaseUser.localId;
 
       try {
-        const user = await this.usersService.create({ email }, firebaseUid);
+        const user = await this.usersService.create(
+          {
+            email,
+            firstName: firstName || undefined,
+            lastName: lastName || undefined,
+            phoneNumber: phoneNumber || undefined,
+          },
+          firebaseUid,
+        );
+
         await this.userRolesService.createDefaultForUser(user.id);
 
         return { firebaseUser, user };
@@ -251,9 +300,9 @@ export class AuthService {
         user = await this.usersService.create(
           {
             email: email!,
-            firstName: firstName || '',
-            lastName: lastName || '',
-            phoneNumber,
+            firstName: firstName || undefined,
+            lastName: lastName || undefined,
+            phoneNumber: phoneNumber || undefined,
           },
           uid,
         );

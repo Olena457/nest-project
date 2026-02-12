@@ -36,6 +36,8 @@ export class RolesGuard implements CanActivate {
       throw new UnauthorizedException('No Firebase uid on request');
     }
 
+    // console.warn('!!! МІЙ UID  FIREBASE:', decoded.uid);
+
     const appUser = await this.usersService.findByProviderUid(decoded.uid);
     if (!appUser) {
       throw new UnauthorizedException('User not registered');

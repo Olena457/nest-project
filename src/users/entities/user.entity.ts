@@ -45,7 +45,7 @@ export class User {
 
   // added conectning to roles
   @ApiProperty({ type: () => [UserRole], description: 'User roles' })
-  @OneToMany(() => UserRole, (role) => role.user)
+  @OneToMany(() => UserRole, (role) => role.user, { eager: true })
   roles: UserRole[];
 
   @ApiProperty({ example: '2025-08-12T16:23:11.123Z' })

@@ -37,7 +37,9 @@ export class FirebaseAuthGuard implements CanActivate {
     }
 
     try {
+      // console.warn('!!! LOG: ПЕРЕВІРЯЄМО токен:', idToken.substring(0, 20) + '...');
       const decodedToken = await this.firebaseAdmin.auth().verifyIdToken(idToken);
+      // console.warn('!!! LOG: токен ВАЛІДНИЙ, UID:', decodedToken.uid);
       request.user = decodedToken;
 
       const allowBannedUsers = this.reflector.getAllAndOverride<boolean>(ALLOW_BANNED_USERS_KEY, [
@@ -50,7 +52,8 @@ export class FirebaseAuthGuard implements CanActivate {
       }
 
       return true;
-    } catch (err: unknown) {
+    } catch (err: any) {
+      // console.warn('!!! ПОМИЛКА ВІД FIREBASE:', err?.message || err);
       if (err instanceof ForbiddenException) {
         throw err;
       }
