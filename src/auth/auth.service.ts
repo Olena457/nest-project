@@ -252,7 +252,9 @@ export class AuthService {
 
         await this.userRolesService.createDefaultForUser(user.id);
 
-        return { firebaseUser, user };
+        const fullUser = await this.usersService.findByProviderUid(firebaseUid);
+
+        return { firebaseUser, user: fullUser };
       } catch (dbErr: unknown) {
         await this.firebaseService.deleteUser(firebaseUid);
         const msg =
