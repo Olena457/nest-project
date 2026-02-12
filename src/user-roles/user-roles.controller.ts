@@ -17,10 +17,10 @@ export class UserRolesController {
   constructor(private readonly service: UserRolesService) {}
 
   @Patch(':id/role')
-  @Roles(ERole.SUPERADMIN)
+  @Roles(ERole.SUPERADMIN, ERole.MODERATOR)
   @ApiBody({ type: SetUserRoleDto })
   @ApiOkResponse({ type: UserRole })
-  @ApiOperation({ summary: 'Grant the role for user (only for superadmin)' })
+  @ApiOperation({ summary: 'Grant the role for user (superadmin/moderator)' })
   async grantRole(
     @Param('id', new ParseUUIDPipe()) userId: string,
     @Body() dto: SetUserRoleDto,
