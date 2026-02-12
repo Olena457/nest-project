@@ -13,7 +13,6 @@ import {
 import {
   ApiBearerAuth,
   ApiBody,
-  ApiExcludeEndpoint,
   ApiOperation,
   ApiQuery,
   ApiResponse,
@@ -47,9 +46,10 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post()
-  @ApiExcludeEndpoint()
+  @UseGuards(RolesGuard)
+  @Roles(ERole.SUPERADMIN, ERole.MODERATOR)
   @ApiBody({ type: CreateUserDto })
-  @ApiOperation({ summary: 'Create the user' })
+  @ApiOperation({ summary: 'Create the user (admin/moderator)' })
   create(@Body() createUserDto: CreateUserDto, @CurrentUser() user: DecodedIdToken) {
     return this.usersService.create(createUserDto, user.uid);
   }
@@ -65,8 +65,7 @@ export class UsersController {
   @UseGuards(RolesGuard)
   @Roles(ERole.SUPERADMIN, ERole.MODERATOR)
   @ApiResponse({ status: 200, description: 'List of users.', type: [User] })
-  @ApiOperation({ summary: 'Get all users (admin)' })
-  // added params toSwagger
+  @ApiOperation({ summary: 'Get all users (admin/moderator)' })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'name', required: false, type: String })
@@ -80,7 +79,7 @@ export class UsersController {
   @UseGuards(RolesGuard)
   @Roles(ERole.SUPERADMIN, ERole.MODERATOR)
   @ApiResponse({ status: 200, description: 'The found user.', type: User })
-  @ApiOperation({ summary: 'Get user by ID (admin)' })
+  @ApiOperation({ summary: 'Get user by ID (admin/moderator)' })
   findOne(@Param('id', new ParseUUIDPipe({ version: '4' })) id: string) {
     return this.usersService.findOne(id);
   }
@@ -89,7 +88,7 @@ export class UsersController {
   @UseGuards(RolesGuard)
   @Roles(ERole.SUPERADMIN, ERole.MODERATOR)
   @ApiBody({ type: UpdateUserDto })
-  @ApiOperation({ summary: 'Update the user (admin)' })
+  @ApiOperation({ summary: 'Update the user (admin/moderator)' })
   update(
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
     @Body() updateUserDto: UpdateUserDto,
@@ -100,7 +99,7 @@ export class UsersController {
   @Delete(':id')
   @UseGuards(RolesGuard)
   @Roles(ERole.SUPERADMIN, ERole.MODERATOR)
-  @ApiOperation({ summary: 'Delete the user (admin)' })
+  @ApiOperation({ summary: 'Delete the user (admin/moderator)' })
   remove(@Param('id', new ParseUUIDPipe({ version: '4' })) id: string) {
     return this.usersService.remove(id);
   }
