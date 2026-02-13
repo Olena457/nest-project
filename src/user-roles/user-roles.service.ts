@@ -12,26 +12,6 @@ export class UserRolesService {
     private readonly repo: Repository<UserRole>,
   ) {}
 
-  // async createDefaultForUser(userId: string): Promise<UserRole> {
-  //   await this.repo
-  //     .createQueryBuilder()
-  //     .insert()
-  //     .into(UserRole)
-  //     .values({ userId, role: ERole.GUEST })
-  //     .orIgnore()
-  //     .execute();
-
-  //   const roles = await this.listRoles(userId);
-  //   const guest = roles.find((r) => r.role === ERole.GUEST);
-
-  //   return (
-  //     guest ??
-  //     roles[0] ??
-  //     (() => {
-  //       throw new NotFoundException('User role not found');
-  //     })()
-  //   );
-  // }
   async createDefaultForUser(userId: string): Promise<UserRole> {
     try {
       const newRole = this.repo.create({

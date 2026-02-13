@@ -1,63 +1,3 @@
-// import {
-//   CanActivate,
-//   ExecutionContext,
-//   ForbiddenException,
-//   Injectable,
-//   UnauthorizedException,
-// } from '@nestjs/common';
-// import { Reflector } from '@nestjs/core';
-
-// import { UsersService } from '../users/users.service';
-// import { ERole } from './enums/role.enum';
-// import { ROLES_KEY } from './user-roles.decorator';
-// import { UserRolesService } from './user-roles.service';
-
-// @Injectable()
-// export class RolesGuard implements CanActivate {
-//   constructor(
-//     private readonly reflector: Reflector,
-//     private readonly usersService: UsersService,
-//     private readonly userRolesService: UserRolesService,
-//   ) {}
-
-//   async canActivate(ctx: ExecutionContext): Promise<boolean> {
-//     const requiredRoles = this.reflector.getAllAndOverride<ERole[]>(ROLES_KEY, [
-//       ctx.getHandler(),
-//       ctx.getClass(),
-//     ]);
-
-//     if (!requiredRoles || requiredRoles.length === 0) {
-//       return true;
-//     }
-
-//     const req = ctx.switchToHttp().getRequest<{ user?: { uid?: string }; userRoles?: ERole[] }>();
-//     const decoded = req.user;
-//     if (!decoded?.uid) {
-//       throw new UnauthorizedException('No Firebase uid on request');
-//     }
-
-//     // console.warn('!!! МІЙ UID  FIREBASE:', decoded.uid);
-
-//     const appUser = await this.usersService.findByProviderUid(decoded.uid);
-//     if (!appUser) {
-//       throw new UnauthorizedException('User not registered');
-//     }
-
-//     const roles = await this.userRolesService.listRoles(appUser.id);
-//     const effectiveRoles = new Set(roles.map((r) => r.role));
-
-//     const userRoles = Array.from(effectiveRoles);
-
-//     const allowed = requiredRoles.some((r) => effectiveRoles.has(r));
-//     if (!allowed) {
-//       throw new ForbiddenException('Insufficient role');
-//     }
-
-//     req.userRoles = userRoles;
-
-//     return true;
-//   }
-// }
 import { CanActivate, ExecutionContext, Injectable, ForbiddenException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { ERole } from './enums/role.enum';
@@ -68,7 +8,7 @@ import { AuthenticatedRequest } from '../auth/guards/firebase-auth.guard';
 export class RolesGuard implements CanActivate {
   constructor(private readonly reflector: Reflector) {}
 
-  canActivate(context: ExecutionContext): boolean {
+  async canActivate(context: ExecutionContext): Promise<boolean> {
     const requiredRoles = this.reflector.getAllAndOverride<ERole[]>(ROLES_KEY, [
       context.getHandler(),
       context.getClass(),
@@ -78,19 +18,35 @@ export class RolesGuard implements CanActivate {
       return true;
     }
 
-    const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
+    const request = await Promise.resolve(
+      context.switchToHttp().getRequest<AuthenticatedRequest>(),
+    );
+
     const user = request.user;
 
-    if (!user || !user.roles) {
-      throw new ForbiddenException('User roles not found');
+    // LOGS DELETE
+    // console.warn('--- RolesGuard Async Check ---');
+    // console.warn('User found in request:', !!user);
+
+    if (!user) {
+      throw new ForbiddenException('User session not found');
     }
 
-    const hasRole = requiredRoles.some((role) => {
-      return user.roles.includes(role);
-    });
+    console.warn('User roles from DB:', JSON.stringify(user.roles));
+    console.warn('Required roles:', JSON.stringify(requiredRoles));
+
+    if (!user.roles || user.roles.length === 0) {
+      throw new ForbiddenException('User has no assigned roles in database');
+    }
+
+    const hasRole = requiredRoles.some((role) => user.roles.includes(role));
 
     if (!hasRole) {
-      throw new ForbiddenException('Insufficient permissions');
+      const userRolesStr = user.roles.join(', ');
+      const reqRolesStr = requiredRoles.join(', ');
+
+      console.warn(`Access denied. User roles: ${userRolesStr}. Required: ${reqRolesStr}`);
+      throw new ForbiddenException('You do not have the required permissions');
     }
 
     return true;

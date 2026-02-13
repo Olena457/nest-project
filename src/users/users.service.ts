@@ -3,17 +3,23 @@
 // import { normalizeEmail } from 'src/common/utils/normalize.util';
 // import { FirebaseService } from 'src/firebase/firebase.service';
 // import { Repository } from 'typeorm';
+// import * as admin from 'firebase-admin';
 
 // import { UserRole } from '../user-roles/entities/user-role.entity';
 // import { ERole } from '../user-roles/enums/role.enum';
 // import { CreateUserDto } from './dto/create-user.dto';
 // import { UpdateUserDto } from './dto/update-user.dto';
 // import { User } from './entities/user.entity';
+// import { ECropType, EGrowthStatus } from '../users/enums/user-crop.enum';
 
 // interface IUsersQuery {
 //   page?: number;
 //   limit?: number;
 //   name?: string;
+//   role?: ERole;
+//   hasPhone?: boolean;
+//   cropType?: ECropType; // change string на ECropType
+//   status?: EGrowthStatus;
 //   sortBy?: string;
 //   order?: 'ASC' | 'DESC';
 // }
@@ -28,7 +34,9 @@
 //     private readonly firebaseService: FirebaseService,
 //   ) {}
 
-//   // --- ДОДАНО: Метод для пошуку за UID (виправляє помилку TS2339) ---
+//   /**
+//    * Find user by Firebase UID
+//    */
 //   async findByProviderUid(providerUid: string): Promise<User | null> {
 //     return await this.usersRepository.findOne({
 //       where: { providerUid },
@@ -36,11 +44,52 @@
 //     });
 //   }
 
+//   async createFromFirebaseToken(decodedToken: admin.auth.DecodedIdToken): Promise<User> {
+//     const fullName: string = typeof decodedToken.name === 'string' ? decodedToken.name : '';
+//     const nameParts = fullName.split(' ');
+
+//     const user = this.usersRepository.create({
+//       providerUid: decodedToken.uid,
+//       email: decodedToken.email?.toLowerCase(),
+//       firstName: nameParts[0] || '',
+//       lastName: nameParts.slice(1).join(' ') || '',
+//     });
+
+//     try {
+//       const savedUser = await this.usersRepository.save(user);
+
+//       const userRole = this.rolesRepository.create({
+//         userId: savedUser.id,
+//         role: ERole.GUEST,
+//       });
+//       await this.rolesRepository.save(userRole);
+
+//       const result = await this.findByProviderUid(savedUser.providerUid);
+
+//       if (!result) {
+//         throw new Error('Failed to retrieve user after creation');
+//       }
+
+//       return result;
+//     } catch (err: unknown) {
+//       const error = err as { code?: string };
+
+//       if (error.code === '23505') {
+//         const existing = await this.findByProviderUid(decodedToken.uid);
+
+//         if (existing) {
+//           return existing;
+//         }
+//       }
+
+//       throw err;
+//     }
+//   }
+
 //   async create(createUserDto: CreateUserDto, providerUid: string): Promise<User> {
-//     // added ''
 //     const user = this.usersRepository.create({
 //       providerUid,
-//       email: createUserDto.email,
+//       email: createUserDto.email.toLowerCase(),
 //       firstName: createUserDto.firstName || '',
 //       lastName: createUserDto.lastName || '',
 //       phoneNumber: createUserDto.phoneNumber,
@@ -60,7 +109,6 @@
 //       return await this.findOne(savedUser.id);
 //     } catch (err: unknown) {
 //       const error = err as { code?: string };
-
 //       if (error.code === '23505') {
 //         throw new BadRequestException('Email or Provider UID already in use.');
 //       }
@@ -70,18 +118,60 @@
 //   }
 
 //   async findAll(query: IUsersQuery) {
-//     const { page = 1, limit = 10, name, sortBy = 'user.createdAt', order = 'DESC' } = query;
-//     const skip = (page - 1) * limit;
+//     const {
+//       page = 1,
+//       limit = 10,
+//       name,
+//       role,
+//       hasPhone,
+//       sortBy = 'createdAt',
+//       order = 'DESC',
+//     } = query;
 
+//     const skip = (page - 1) * limit;
 //     const queryBuilder = this.usersRepository.createQueryBuilder('user');
 //     queryBuilder.leftJoinAndSelect('user.roles', 'roles');
 
 //     if (name) {
-//       queryBuilder.andWhere('user.email ILIKE :name', { name: `%${name}%` });
+//       queryBuilder.andWhere(
+//         '(user.email ILIKE :name OR user.firstName ILIKE :name OR user.lastName ILIKE :name)',
+//         { name: `%${name}%` },
+//       );
 //     }
 
-//     const sortField = sortBy.includes('.') ? sortBy : `user.${sortBy}`;
-//     queryBuilder.orderBy(sortField, order).skip(skip).take(limit);
+//     if (role) {
+//       queryBuilder.andWhere('roles.role = :role', { role });
+//     }
+
+//     if (hasPhone !== undefined) {
+//       if (String(hasPhone) === 'true') {
+//         queryBuilder.andWhere('user.phoneNumber IS NOT NULL AND user.phoneNumber != :empty', {
+//           empty: '',
+//         });
+//       } else {
+//         queryBuilder.andWhere('(user.phoneNumber IS NULL OR user.phoneNumber = :empty)', {
+//           empty: '',
+//         });
+//       }
+//     }
+
+//     const fieldOnly = sortBy.includes('.') ? sortBy.split('.').pop() : sortBy;
+//     // const validFields = ['id', 'email', 'firstName', 'lastName', 'createdAt', 'phoneNumber'];
+//     const validFields = [
+//       'id',
+//       'email',
+//       'firstName',
+//       'lastName',
+//       'createdAt',
+//       'phoneNumber',
+//       'cropType',
+//       'cropStatus',
+//       'totalGrowthDays',
+//       'currentGrowthDay',
+//     ];
+//     const finalSortField = validFields.includes(fieldOnly || '') ? fieldOnly : 'createdAt';
+
+//     queryBuilder.orderBy(`user.${finalSortField}`, order).skip(skip).take(limit);
 
 //     const [data, total] = await queryBuilder.getManyAndCount();
 
@@ -124,14 +214,12 @@
 //       await this.usersRepository.save(entity);
 
 //       if (role) {
-//         // updated user or creted new role
 //         await this.rolesRepository.upsert({ userId: id, role: role }, ['userId']);
 //       }
 
 //       return await this.findOne(id);
 //     } catch (err: unknown) {
 //       const error = err as { code?: string };
-
 //       if (error.code === '23505') {
 //         throw new BadRequestException('Email already in use.');
 //       }
@@ -155,18 +243,15 @@
 //   }
 
 //   async seedUsers() {
-//     // dynamically import ESM-only faker to avoid Jest parsing issues during tests
 //     const { faker } = await import('@faker-js/faker');
 
 //     for (let i = 0; i < 40; i++) {
-//       let role: ERole | undefined;
+//       let role: ERole = ERole.GUEST;
 
 //       if (i === 0) {
 //         role = ERole.SUPERADMIN;
 //       } else if (i % 5 === 0) {
 //         role = ERole.MODERATOR;
-//       } else if (i % 2 === 0) {
-//         role = ERole.GUEST;
 //       }
 
 //       const dto: CreateUserDto = {
@@ -184,7 +269,6 @@
 //     return { message: 'Seed completed: 40 users added.' };
 //   }
 // }
-
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { normalizeEmail } from 'src/common/utils/normalize.util';
@@ -197,11 +281,15 @@ import { ERole } from '../user-roles/enums/role.enum';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
-
+import { ECropType, EGrowthStatus } from '../users/enums/user-crop.enum';
 interface IUsersQuery {
   page?: number;
   limit?: number;
   name?: string;
+  role?: ERole;
+  hasPhone?: boolean;
+  cropType?: ECropType;
+  status?: EGrowthStatus;
   sortBy?: string;
   order?: 'ASC' | 'DESC';
 }
@@ -217,7 +305,7 @@ export class UsersService {
   ) {}
 
   /**
-   * Пошук користувача за Firebase UID з підвантаженням ролей
+   * Find user by Firebase UID
    */
   async findByProviderUid(providerUid: string): Promise<User | null> {
     return await this.usersRepository.findOne({
@@ -258,6 +346,7 @@ export class UsersService {
 
       if (error.code === '23505') {
         const existing = await this.findByProviderUid(decodedToken.uid);
+
         if (existing) {
           return existing;
         }
@@ -270,7 +359,7 @@ export class UsersService {
   async create(createUserDto: CreateUserDto, providerUid: string): Promise<User> {
     const user = this.usersRepository.create({
       providerUid,
-      email: createUserDto.email,
+      email: createUserDto.email.toLowerCase(),
       firstName: createUserDto.firstName || '',
       lastName: createUserDto.lastName || '',
       phoneNumber: createUserDto.phoneNumber,
@@ -299,18 +388,75 @@ export class UsersService {
   }
 
   async findAll(query: IUsersQuery) {
-    const { page = 1, limit = 10, name, sortBy = 'user.createdAt', order = 'DESC' } = query;
-    const skip = (page - 1) * limit;
+    // added cropType and status
+    const {
+      page = 1,
+      limit = 10,
+      name,
+      role,
+      hasPhone,
+      cropType,
+      status,
+      sortBy = 'createdAt',
+      order = 'DESC',
+    } = query;
 
+    const skip = (page - 1) * limit;
     const queryBuilder = this.usersRepository.createQueryBuilder('user');
     queryBuilder.leftJoinAndSelect('user.roles', 'roles');
 
-    if (name) {
-      queryBuilder.andWhere('user.email ILIKE :name', { name: `%${name}%` });
+    //type of filter
+    if (cropType) {
+      queryBuilder.andWhere('user.cropType = :cropType', { cropType });
     }
 
-    const sortField = sortBy.includes('.') ? sortBy : `user.${sortBy}`;
-    queryBuilder.orderBy(sortField, order).skip(skip).take(limit);
+    // status filter
+    if (status) {
+      queryBuilder.andWhere('user.status = :status', { status });
+    }
+
+    if (name) {
+      queryBuilder.andWhere(
+        '(user.email ILIKE :name OR user.firstName ILIKE :name OR user.lastName ILIKE :name)',
+        { name: `%${name}%` },
+      );
+    }
+
+    if (role) {
+      queryBuilder.andWhere('roles.role = :role', { role });
+    }
+
+    if (hasPhone !== undefined) {
+      if (String(hasPhone) === 'true') {
+        queryBuilder.andWhere('user.phoneNumber IS NOT NULL AND user.phoneNumber != :empty', {
+          empty: '',
+        });
+      } else {
+        queryBuilder.andWhere('(user.phoneNumber IS NULL OR user.phoneNumber = :empty)', {
+          empty: '',
+        });
+      }
+    }
+
+    const fieldOnly = sortBy.includes('.') ? sortBy.split('.').pop() : sortBy;
+
+    // validate fields
+    const validFields = [
+      'id',
+      'email',
+      'firstName',
+      'lastName',
+      'createdAt',
+      'phoneNumber',
+      'cropType',
+      'status',
+      'totalGrowthDays',
+      'growthDay',
+    ];
+
+    const finalSortField = validFields.includes(fieldOnly || '') ? fieldOnly : 'createdAt';
+
+    queryBuilder.orderBy(`user.${finalSortField}`, order).skip(skip).take(limit);
 
     const [data, total] = await queryBuilder.getManyAndCount();
 
@@ -353,7 +499,6 @@ export class UsersService {
       await this.usersRepository.save(entity);
 
       if (role) {
-        //  (upsert за userId)
         await this.rolesRepository.upsert({ userId: id, role: role }, ['userId']);
       }
 
@@ -386,14 +531,12 @@ export class UsersService {
     const { faker } = await import('@faker-js/faker');
 
     for (let i = 0; i < 40; i++) {
-      let role: ERole | undefined;
+      let role: ERole = ERole.GUEST;
 
       if (i === 0) {
         role = ERole.SUPERADMIN;
       } else if (i % 5 === 0) {
         role = ERole.MODERATOR;
-      } else if (i % 2 === 0) {
-        role = ERole.GUEST;
       }
 
       const dto: CreateUserDto = {
