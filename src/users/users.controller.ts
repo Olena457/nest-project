@@ -61,7 +61,7 @@ export class UsersController {
   }
 
   @Post('seed')
-  @ApiOperation({ summary: 'Seed database with 40 fake users' })
+  @ApiOperation({ summary: 'Seed database with fake users' })
   @ApiResponse({ status: 201, description: 'Seeding completed successfully.' })
   async seed() {
     return await this.usersService.seedUsers();
@@ -70,7 +70,7 @@ export class UsersController {
   @Get()
   @Roles(ERole.SUPERADMIN, ERole.MODERATOR)
   @ApiResponse({ status: 200, description: 'List of users retrieved successfully.', type: [User] })
-  @ApiOperation({ summary: 'Get all users (Admin/Moderator access)' })
+  @ApiOperation({ summary: 'Get all users (admin/moderator)' })
   @ApiQuery({
     name: 'page',
     required: false,
@@ -93,7 +93,7 @@ export class UsersController {
     name: 'role',
     required: false,
     enum: ERole,
-    description: 'Filter users by a specific role',
+    description: 'Filter users by role',
   })
   @ApiQuery({
     name: 'hasPhone',
@@ -134,7 +134,7 @@ export class UsersController {
   @ApiResponse({ status: 200, description: 'Current user profile.', type: User })
   getMe(@CurrentUser() user: AuthenticatedUser) {
     //  FirebaseAuthGuard спрацював!
-    console.warn('!!!User from Decorator:', user);
+    // console.warn('!!!User from Decorator:', user);
 
     return this.usersService.findOne(user.dbId);
   }

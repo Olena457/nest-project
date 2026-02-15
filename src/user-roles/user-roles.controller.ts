@@ -20,7 +20,7 @@ export class UserRolesController {
   @Roles(ERole.SUPERADMIN, ERole.MODERATOR)
   @ApiBody({ type: SetUserRoleDto })
   @ApiOkResponse({ type: UserRole })
-  @ApiOperation({ summary: 'Grant the role for user (superadmin/moderator)' })
+  @ApiOperation({ summary: 'Grant the role for user (admin/moderator)' })
   async grantRole(
     @Param('id', new ParseUUIDPipe()) userId: string,
     @Body() dto: SetUserRoleDto,
