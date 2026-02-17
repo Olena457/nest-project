@@ -33,9 +33,6 @@ export class UsersService {
     private readonly firebaseService: FirebaseService,
   ) {}
 
-  /**
-   * Find user by Firebase UID
-   */
   async findByProviderUid(providerUid: string): Promise<User | null> {
     return await this.usersRepository.findOne({
       where: { providerUid },

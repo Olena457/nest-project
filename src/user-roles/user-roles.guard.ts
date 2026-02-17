@@ -25,15 +25,15 @@ export class RolesGuard implements CanActivate {
     const user = request.user;
 
     // LOGS DELETE
-    // console.warn('--- RolesGuard Async Check ---');
+    // console.warn('--- RolesGuard Check ---');
     // console.warn('User found in request:', !!user);
 
     if (!user) {
       throw new ForbiddenException('User session not found');
     }
 
-    console.warn('User roles from DB:', JSON.stringify(user.roles));
-    console.warn('Required roles:', JSON.stringify(requiredRoles));
+    // console.warn('User roles from DB:', JSON.stringify(user.roles));
+    // console.warn('Required roles:', JSON.stringify(requiredRoles));
 
     if (!user.roles || user.roles.length === 0) {
       throw new ForbiddenException('User has no assigned roles in database');

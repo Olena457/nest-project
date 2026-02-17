@@ -133,7 +133,7 @@ export class UsersController {
   @ApiOperation({ summary: 'Get current user profile' })
   @ApiResponse({ status: 200, description: 'Current user profile.', type: User })
   getMe(@CurrentUser() user: AuthenticatedUser) {
-    //  FirebaseAuthGuard спрацював!
+    //  FirebaseAuthGuard  works!
     // console.warn('!!!User from Decorator:', user);
 
     return this.usersService.findOne(user.dbId);
