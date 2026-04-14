@@ -14,24 +14,24 @@ A robust backend application built with the [NestJS](https://nestjs.com/) framew
 
 
 <div style="display: flex; flex-wrap: wrap; gap: 15px;">
-  <img src="assets/photo-8.jpg" width="25%" height="132px" alt="image"/>
-  <img src="assets/image-1.jpg" width="25%" height="132px" alt="image"/>
-  <img src="assets/image-2.jpg" width="25%" height="132px" alt="image"/>
-  <img src="assets/image-4.jpg" width="25%" height="132px" alt="image"/>
-  <img src="assets/image-7.jpg" width="25%" height="132px" alt="image"/>
-  <img src="assets/image-5.jpg" width="25%" height="132px" alt="image"/>
-  <img src="assets/image-6.jpg" width="25%" height="132px" alt="image"/>
-  <img src="assets/image-8.jpg" width="25%" height="132px" alt="image"/>
-  <img src="assets/image-9.jpg" width="25%" height="132px" alt="image"/>
-  <img src="assets/photo-1.jpg" width="25%" height="132px" alt="image"/>
-  <img src="assets/photo-4.jpg" width="25%" height="132px" alt="image"/>
-  <img src="assets/photo-2.jpg" width="25%" height="132px" alt="image"/>
-  <img src="assets/photo-3.jpg" width="25%" height="132px" alt="image"/>
-  <img src="assets/photo-5.jpg" width="25%" height="132px" alt="image"/>
-  <img src="assets/photo-6.jpg" width="25%" height="132px" alt="image"/>
-  <img src="assets/photo-7.jpg" width="25%" height="132px" alt="image"/>
-  <img src="assets/image-3.jpg" width="25%" height="132px" alt="image"/>
-  <img src="assets/photo-9.jpg" width="25%" height="132px" alt="image"/>
+  <img src="assets/photo-8.jpg" width="25%" height="140px" alt="image"/>
+  <img src="assets/image-1.jpg" width="25%" height="140px" alt="image"/>
+  <img src="assets/image-2.jpg" width="25%" height="140px" alt="image"/>
+  <img src="assets/image-4.jpg" width="25%" height="140px" alt="image"/>
+  <img src="assets/image-7.jpg" width="25%" height="140px" alt="image"/>
+  <img src="assets/image-5.jpg" width="25%" height="140px" alt="image"/>
+  <img src="assets/image-6.jpg" width="25%" height="140px" alt="image"/>
+  <img src="assets/image-8.jpg" width="25%" height="140px" alt="image"/>
+  <img src="assets/image-9.jpg" width="25%" height="140px" alt="image"/>
+  <img src="assets/photo-1.jpg" width="25%" height="140px" alt="image"/>
+  <img src="assets/photo-4.jpg" width="25%" height="140px" alt="image"/>
+  <img src="assets/photo-2.jpg" width="25%" height="140px" alt="image"/>
+  <img src="assets/photo-3.jpg" width="25%" height="140px" alt="image"/>
+  <img src="assets/photo-5.jpg" width="25%" height="140px" alt="image"/>
+  <img src="assets/photo-6.jpg" width="25%" height="140px" alt="image"/>
+  <img src="assets/photo-7.jpg" width="25%" height="140px" alt="image"/>
+  <img src="assets/image-3.jpg" width="25%" height="140px" alt="image"/>
+  <img src="assets/photo-9.jpg" width="25%" height="140px" alt="image"/>
   
 </div>
 
